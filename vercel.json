@@ -1,8 +1,14 @@
- {
+{
   "redirects": [
     {
       "source": "/",
       "destination": "https://github.com/novatorem/novatorem"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/spotify",
+      "destination": "/api/orchestrator"
     }
   ]
 }
