@@ -34,7 +34,8 @@ except ImportError:
 
 
 # Must match Redirect URIs in the Spotify Developer Dashboard exactly.
-REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://localhost/callback/")
+# Spotify disallows "localhost"; use an explicit loopback IP + port.
+REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://127.0.0.1:8888/callback")
 SCOPES = "user-read-currently-playing,user-read-recently-played"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 ROOT = Path(__file__).resolve().parents[1]
