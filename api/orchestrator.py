@@ -559,6 +559,63 @@ def get_active_service() -> Tuple[str, Any]:
         raise ServiceNotConfiguredError()
 
 
+def get_now_playing() -> dict[str, Any]:
+    """
+    Fetch now-playing data from the preferred service.
+
+    Prefers Spotify when configured. If Spotify authentication fails and
+    Last.fm is also configured, falls back to Last.fm so the widget stays up
+    while a refresh token is renewed.
+    """
+    from . import lastfm, spotify
+    from .exceptions import AuthenticationError
+
+    if spotify.is_configured():
+        try:
+            return spotify.get_now_playing()
+        except AuthenticationError:
+            if lastfm.is_configured():
+                return lastfm.get_now_playing()
+            raise
+
+    if lastfm.is_configured():
+        return lastfm.get_now_playing()
+
+    raise ServiceNotConfiguredError()
+
+
+def _wrap_error_lines(message: str, max_chars: int = 62, max_lines: int = 4) -> list[str]:
+    """Split a long error message into short SVG text lines."""
+    words = (message or "Unknown error").split()
+    lines: list[str] = []
+    current = ""
+
+    for word in words:
+        candidate = word if not current else f"{current} {word}"
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+        if current:
+            lines.append(current)
+        current = word
+        if len(lines) >= max_lines:
+            break
+
+    if current and len(lines) < max_lines:
+        lines.append(current)
+
+    if not lines:
+        lines = ["Unknown error"]
+
+    if len(words) > 0 and (
+        len(lines) >= max_lines
+        and " ".join(lines) != " ".join(words)
+    ):
+        lines[-1] = lines[-1][: max(0, max_chars - 1)].rstrip() + "…"
+
+    return lines
+
+
 # ============================================================================
 # Error Response Generation
 # ============================================================================
@@ -575,12 +632,19 @@ def make_error_svg(message: str, status_code: int = 500) -> Response:
     Returns:
         Flask Response with error SVG
     """
-    # Simple error SVG
+    lines = _wrap_error_lines(message)
+    line_height = 18
+    start_y = (svg_config.height / 2) - ((len(lines) - 1) * line_height / 2)
+    text_nodes = "\n".join(
+        f'        <text x="50%" y="{start_y + index * line_height}" fill="#ff6b6b" '
+        f'font-family="sans-serif" font-size="13" text-anchor="middle" '
+        f'dominant-baseline="middle">{escape_xml(line)}</text>'
+        for index, line in enumerate(lines)
+    )
+
     error_svg = f"""<svg width="{svg_config.width}" height="{svg_config.height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="#1a1a1a" rx="5"/>
-        <text x="50%" y="50%" fill="#ff6b6b" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">
-            {escape_xml(message)}
-        </text>
+{text_nodes}
     </svg>"""
 
     resp = Response(error_svg, mimetype="image/svg+xml", status=status_code)
@@ -612,12 +676,7 @@ def catch_all(path: str) -> Response:
     is_compact = request.args.get("compact", "").lower() in ("true", "1", "yes")
 
     try:
-        service_name, service = get_active_service()
-    except MusicWidgetError as e:
-        return make_error_svg(e.message, e.status_code)
-
-    try:
-        track_data = service.get_now_playing()
+        track_data = get_now_playing()
     except MusicWidgetError as e:
         return make_error_svg(e.message, e.status_code)
     except Exception as e:
@@ -655,10 +714,9 @@ def redirect_to_song() -> Response:
     fallback_url = "https://github.com/novatorem/novatorem"
 
     try:
-        service_name, service = get_active_service()
-        track_data = service.get_now_playing()
+        track_data = get_now_playing()
         track_url = track_data.get("track_url")
-        
+
         if track_url:
             return redirect(track_url)
     except Exception:

@@ -3,7 +3,13 @@
 
 # Environment variables
 .env
+.env.local
+.env*.local
+.spotify_oauth_code.json
 
 # Pycache
 __pycache__
 .venv
+
+# Vercel
+.vercel

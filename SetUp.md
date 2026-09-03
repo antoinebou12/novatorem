@@ -33,9 +33,14 @@ Press **Ctrl+C** to stop the server. Pass `--no-open` to skip opening the browse
   - `Client Secret`
 - Click on **Edit Settings**
 - In **Redirect URIs**:
-  - Add `https://example.com/callback`
+  - Add `http://localhost/callback/` (must match exactly, including the trailing slash)
 
 ## Refresh Token
+
+> **Important (2026):** Spotify refresh tokens now expire after **6 months**.
+> When `/api/spotify` fails with `invalid_grant` / “Refresh token expired or revoked”,
+> regenerate the token with the steps below (or run `python scripts/renew_spotify_token.py --update-vercel`)
+> and update `SPOTIFY_REFRESH_TOKEN` in Vercel, then redeploy.
 
 ### Powershell
 

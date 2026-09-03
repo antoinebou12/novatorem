@@ -91,11 +91,20 @@ class SpotifyTokenManager:
         Raises:
             AuthenticationError: If token refresh fails
         """
+        if not spotify_config.is_configured():
+            raise AuthenticationError(
+                "Spotify",
+                "Missing SPOTIFY_CLIENT_ID, SPOTIFY_SECRET_ID, or SPOTIFY_REFRESH_TOKEN",
+            )
+
         data = {
             "grant_type": "refresh_token",
             "refresh_token": spotify_config.refresh_token,
         }
-        headers = {"Authorization": f"Basic {self._get_auth_header()}"}
+        headers = {
+            "Authorization": f"Basic {self._get_auth_header()}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
 
         try:
             response = requests.post(
@@ -105,14 +114,46 @@ class SpotifyTokenManager:
                 timeout=10,
                 verify=False,
             )
-            response.raise_for_status()
+
+            if not response.ok:
+                error_code = ""
+                error_description = ""
+                try:
+                    payload = response.json()
+                    error_code = str(payload.get("error", ""))
+                    error_description = str(payload.get("error_description", ""))
+                except ValueError:
+                    error_description = (response.text or "")[:200]
+
+                # Spotify expires/revokes refresh tokens (6-month lifetime as of 2026).
+                # Do not retry — the stored token must be regenerated via OAuth.
+                if response.status_code == 400 and error_code == "invalid_grant":
+                    raise AuthenticationError(
+                        "Spotify",
+                        "Refresh token expired or revoked. "
+                        "Regenerate SPOTIFY_REFRESH_TOKEN (tokens expire after 6 months).",
+                    )
+
+                detail = error_description or error_code or f"HTTP {response.status_code}"
+                raise AuthenticationError("Spotify", detail)
+
             result = response.json()
 
             if "access_token" not in result:
                 raise AuthenticationError("Spotify", "No access token in response")
 
+            # Spotify may rotate the refresh token; warn so env can be updated.
+            rotated = result.get("refresh_token")
+            if rotated and rotated != spotify_config.refresh_token:
+                print(
+                    "WARNING: Spotify returned a rotated refresh token. "
+                    "Update SPOTIFY_REFRESH_TOKEN in your environment."
+                )
+
             return result["access_token"]
 
+        except AuthenticationError:
+            raise
         except requests.RequestException as e:
             raise AuthenticationError("Spotify", str(e)) from e
 
