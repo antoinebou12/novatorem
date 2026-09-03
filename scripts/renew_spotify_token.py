@@ -211,10 +211,9 @@ def main() -> int:
             print("  3. Redeploy")
             return 1
     else:
-        print("\nNext: update Vercel with:")
-        print("  python scripts/renew_spotify_token.py --update-vercel --code <already-used-code-wont-work>")
-        print("Or set SPOTIFY_REFRESH_TOKEN in the Vercel dashboard and redeploy.")
-        print(f"\nToken (keep private):\n{refresh_token}")
+        print("\nNext (secrets stay hidden):")
+        print("  python scripts/apply_spotify_secrets.py --refresh-token-file .secret_refresh.txt --update-vercel")
+        print("Or re-run with --update-vercel now.")
 
     return 0
 

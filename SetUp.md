@@ -39,8 +39,10 @@ Press **Ctrl+C** to stop the server. Pass `--no-open` to skip opening the browse
 
 > **Important (2026):** Spotify refresh tokens now expire after **6 months**.
 > When `/api/spotify` fails with `invalid_grant` / “Refresh token expired or revoked”,
-> regenerate the token with the steps below (or run `python scripts/renew_spotify_token.py --update-vercel`)
-> and update `SPOTIFY_REFRESH_TOKEN` in Vercel, then redeploy.
+> regenerate the token (`python scripts/renew_spotify_token.py`) then apply it without
+> printing secrets:
+> `python scripts/apply_spotify_secrets.py --refresh-token-file .secret_refresh.txt --update-vercel`
+> (or paste into chat and ask the agent to run the apply script). Then redeploy if needed.
 
 ### Powershell
 
