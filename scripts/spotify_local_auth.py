@@ -3,7 +3,7 @@
 Local Spotify OAuth helper using Spotify-approved loopback redirect.
 
 Dashboard Redirect URI must be exactly:
-  http://127.0.0.1:8888/callback
+  http://127.0.0.1:8000/callback
 
 Reads SPOTIFY_CLIENT_ID / SPOTIFY_SECRET_ID from .env.local (gitignored),
 captures the auth code locally, writes a new refresh token, optionally
@@ -29,9 +29,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV_LOCAL = ROOT / ".env.local"
-REDIRECT_URI = "http://127.0.0.1:8888/callback"
+REDIRECT_URI = "http://127.0.0.1:8000/callback"
 LISTEN_HOST = "127.0.0.1"
-LISTEN_PORT = 8888
+LISTEN_PORT = 8000
 SCOPES = "user-read-currently-playing,user-read-recently-played"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 

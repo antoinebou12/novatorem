@@ -33,18 +33,18 @@ Press **Ctrl+C** to stop the server. Pass `--no-open` to skip opening the browse
   - `Client Secret`
 - Click on **Edit Settings**
 - In **Redirect URIs**:
-  - Add `http://127.0.0.1:8888/callback`
+  - Add `http://127.0.0.1:8000/callback`
   - Do **not** use `localhost` — Spotify rejects it; use the loopback IP instead.
 
 ## Refresh Token
 
 > **Important (2026):** Spotify refresh tokens expire after **6 months**.
-> Spotify also **rejects `localhost` redirect URIs** — use `http://127.0.0.1:8888/callback`.
+> Spotify also **rejects `localhost` redirect URIs** — use `http://127.0.0.1:8000/callback`.
 
 ### Recommended (local, no secrets printed)
 
 1. In the Spotify dashboard **Redirect URIs**, set exactly:
-   `http://127.0.0.1:8888/callback`
+   `http://127.0.0.1:8000/callback`
    (remove `http://localhost/callback/` if present)
 2. Keep client id/secret in `.env.local` (gitignored)
 3. Run:
@@ -61,11 +61,11 @@ Press **Ctrl+C** to stop the server. Pass `--no-open` to skip opening the browse
 ```powershell
 $ClientId = Read-Host "Client ID"
 $ClientSecret = Read-Host "Client Secret"
-$Redirect = "http://127.0.0.1:8888/callback"
+$Redirect = "http://127.0.0.1:8000/callback"
 
 Start-Process "https://accounts.spotify.com/authorize?client_id=$ClientId&response_type=code&scope=user-read-currently-playing,user-read-recently-played&redirect_uri=$Redirect"
 
-$Code = Read-Host "Please insert everything after 'http://127.0.0.1:8888/callback?code='"
+$Code = Read-Host "Please insert everything after 'http://127.0.0.1:8000/callback?code='"
 
 $ClientBytes = [System.Text.Encoding]::UTF8.GetBytes("${ClientId}:${ClientSecret}")
 $EncodedClientInfo =[Convert]::ToBase64String($ClientBytes)
@@ -80,17 +80,17 @@ curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -H "Authorizat
 - Navigate to the following URL:
 
 ```
-https://accounts.spotify.com/authorize?client_id={SPOTIFY_CLIENT_ID}&response_type=code&scope=user-read-currently-playing,user-read-recently-played&redirect_uri=http://127.0.0.1:8888/callback
+https://accounts.spotify.com/authorize?client_id={SPOTIFY_CLIENT_ID}&response_type=code&scope=user-read-currently-playing,user-read-recently-played&redirect_uri=http://127.0.0.1:8000/callback
 ```
 
-- After logging in, save the {CODE} portion of: `http://127.0.0.1:8888/callback?code={CODE}`
+- After logging in, save the {CODE} portion of: `http://127.0.0.1:8000/callback?code={CODE}`
 
 - Create a string combining `{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}` (e.g. `5n7o4v5a3t7o5r2e3m1:5a8n7d3r4e2w5n8o2v3a7c5`) and **encode** into [Base64](https://base64.io/).
 
 - Then run a [curl command](https://httpie.org/run) in the form of:
 
 ```sh
-curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -H "Authorization: Basic {BASE64}" -d "grant_type=authorization_code&redirect_uri=http://127.0.0.1:8888/callback&code={CODE}" https://accounts.spotify.com/api/token
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -H "Authorization: Basic {BASE64}" -d "grant_type=authorization_code&redirect_uri=http://127.0.0.1:8000/callback&code={CODE}" https://accounts.spotify.com/api/token
 ```
 
 - Save the Refresh token
