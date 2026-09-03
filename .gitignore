@@ -1,10 +1,11 @@
 #MacOS
 .DS_Store
 
-# Environment variables
+# Environment variables / secrets (never commit)
 .env
 .env.local
 .env*.local
+.secret*
 .spotify_oauth_code.json
 
 # Pycache
